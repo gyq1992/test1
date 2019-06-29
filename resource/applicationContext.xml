@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+  		<context:component-scan base-package="com.gyq"/>
+  		
+  		<!-- 定义dbcp数据源 -->
+  		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+  			<!-- 指定驱动类 -->
+  			<property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+  			<!-- url地址 -->
+  			<property name="url" value="jdbc:mysql://localhost:4000/data"/>
+  			<!-- 账户和密码 -->
+  			<property name="username" value="root"/>
+  			<property name="password" value="1234"/>
+  		</bean>
+  		<!-- 事务管理器 -->
+  		<bean id="transcationManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+  			<property name="sessionFactory" ref="sessionFactory"/>
+  		</bean>
+  		<!-- 用tx:advice标签为事务管理器设置事务属性 -->
+  		<tx:advice id="txAdvice" transaction-manager="transcationManager">
+  			<tx:attributes>
+  				<tx:method name="insert*" propagation="REQUIRED" isolation="DEFAULT"/>
+  				<tx:method name="select*" propagation="REQUIRED" isolation="DEFAULT"/>
+  				<tx:method name="delete*" propagation="REQUIRED" isolation="DEFAULT"/>
+  				<tx:method name="update*" propagation="REQUIRED" isolation="DEFAULT"/>
+  				<tx:method name="*" propagation="REQUIRED" isolation="DEFAULT"/>
+  			</tx:attributes>
+  		</tx:advice>
+  		<aop:aspectj-autoproxy/>
+  		<aop:config>
+  			<aop:pointcut expression="execution(* com.gyq.service..*.*(..))" id="pointcut"/>
+  			<aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut"/>
+  		</aop:config>
+  		<!-- 
+  		<bean id="sessionFactroy" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+  			<property name="configLoaction">
+  				<value>classpath:hibernate.cfg.xml</value>
+  			</property>
+  		</bean>
+  		 -->
+  		 <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+  		 	<property name="dataSource" ref="dataSource"/>
+  		 	<!-- 添加hibernate配置参数 -->
+  		 	<property name="hibernateProperties">
+  		 		<props>
+  		 			<prop key="hibernate.dialect">
+  		 				org.hibernate.dialect.MySQLDialect
+  		 			</prop>
+  		 			<prop key="hibernate.show_sql">true</prop>
+  		 			<prop key="hibernate.format_sql">true</prop>
+  		 		</props>
+  		 	</property>
+  		 	<!-- 添加对象映射文件 
+  		 		<property name="mappingResource"></property>单个映射文件
+  		 	-->
+  		 	<property name="mappingDirectoryLocations">
+  		 		<list>
+  		 			<value>classpath:com/gyq/pojo</value>
+  		 		</list>
+  		 	</property>
+  		 </bean>
+  		 <bean id="peopleDao" class="com.gyq.dao.PeopleDao">
+  		 		<property name="sessionFactory" ref="sessionFactory"/>
+  		 </bean>
+  		 <bean id="usersDao" class="com.gyq.dao.UsersDao">
+  		 		<property name="sessionFactory" ref="sessionFactory"/>
+  		 </bean>
+  		 <bean id="housesDao" class="com.gyq.dao.HousesDao">
+  		 		<property name="sessionFactory" ref="sessionFactory"/>
+  		 </bean>
+  		 <bean id="peopleBiz" class="com.gyq.service.PeopleBiz">
+  		 	<property name="peopleDao" ref="peopleDao"/>
+  		 </bean>
+  		 <bean id="usersBiz" class="com.gyq.service.UsersBiz">
+  		 	<property name="usersDao" ref="usersDao"/>
+  		 </bean>
+  		 <bean id="housesBiz" class="com.gyq.service.HousesBiz">
+  		 	<property name="housesDao" ref="housesDao"/>
+  		 </bean>
+  		 <bean id="peopleAction" class="com.gyq.action.PeopleAction">
+  		 	<property name="peopleBiz" ref="peopleBiz"/>
+  		 </bean>
+  		<bean id="usersAction" class="com.gyq.action.UsersAction">
+  		 	<property name="usersBiz" ref="usersBiz"/>
+  		 </bean>
+  		 <bean id="housesAction" class="com.gyq.action.HousesAction">
+  		 	<property name="housesBiz" ref="housesBiz"/>
+  		 </bean>
+</beans>
